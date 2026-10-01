@@ -1,0 +1,22 @@
+# settings and logs written next to the program (they hold the access key)
+bridge.json
+bridge.json.broken
+bridge.log*
+
+# build output
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+.venv*/
+.pytest_cache/
+*.egg-info/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
