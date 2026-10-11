@@ -68,8 +68,7 @@ def main() -> int:
     exe = os.path.join(ROOT, "dist", EXE_NAME + (".exe" if os.name == "nt" else ""))
     with open(exe, "rb") as f:
         digest = hashlib.sha256(f.read()).hexdigest()
-    with open(exe + ".sha256", "w", encoding="ascii", newline="
-") as f:
+    with open(exe + ".sha256", "w", encoding="ascii", newline="\n") as f:
         f.write(f"{digest}  {os.path.basename(exe)}\n")
     print(f"\nbuilt {exe}\nSHA-256 {digest}")
     return 0
