@@ -84,6 +84,18 @@ configured by hand on the **Manual & monitor** tab.
 
 Auto-detection reserves the ports it searches; reads of those ports answer `409 busy` until it finishes.
 
+### Scales that send only when Print is pressed
+
+Many indicators — especially those wired to a label printer — stay silent until the operator presses *Print*,
+then send the whole label. Tick **The scale sends only when Print is pressed** (and, if you like, **Listen only**)
+and press Print when the page asks: the port is held open at one speed until data arrives; unreadable data means
+another speed, and the next press is awaited at the next one. One press is enough for 7E1/7O1.
+
+For such a scale the bridge keeps the port **open all the time** and records every label: weight, unit and the
+other values on the label (order number, shift, date …) in `labels/<profile>-YYYY-MM-DD.jsonl` beside
+`bridge.json`, and the last 500 through `GET /labels`. To keep the label printer working, connect the PC with a
+**Y cable**: scale TX (and ground) to both the printer and the PC's RX; the PC never transmits on that line.
+
 ## Supported formats
 
 | ID | Format | Talks | Used by (examples) |
@@ -99,6 +111,7 @@ Auto-detection reserves the ports it searches; reads of those ports answer `409 
 | `xk3190_tf0` | XK3190 continuous (tF=0, XOR checksum) | continuous | Yaohua XK3190-A9/A12 and compatibles |
 | `xk3190_reversed` | XK3190 `=` reversed-digit stream (tF=2/3) | continuous | Yaohua XK3190 series, big displays |
 | `mahak_mds` | Mahak MDS binary (`4D 09 04 07`) — **tested on real hardware** | on request | Mahak MDS 13000 and related models |
+| `label_print` | Label printer stream: TSPL / EPL2 / ZPL — **tested on real hardware** | on Print key | indicators wired to a TSC, Zebra or Argox label printer (e.g. PTC400) |
 | `ascii_generic` | Any readable line with a number and a unit | continuous | everything else that streams text |
 | `custom_binary` | A binary frame you describe (pattern, offset, length, byte order) | either | — |
 | `custom_ascii` | A text format you describe (regular expression) | either | — |
@@ -131,6 +144,7 @@ Everything below needs the header `X-Bridge-Token: <access key>` except `/health
 | `GET /ports` | the COM ports of the PC (name, description, USB IDs, chip, warnings) |
 | `GET /profiles` | the saved scale profiles |
 | `GET /weight?profile=packing-1` | the current weight of a saved profile |
+| `GET /labels?profile=ps02&after=SEQ&limit=100` | labels printed by a print-only scale, oldest first (`seq` grows by one per label) |
 | `GET /weight?port=COM7&protocol=mt_sics&baud=9600&framing=8N1` | the current weight without a profile |
 | `POST /weight` `{"profile": "packing-1"}` or a whole profile | same, as JSON |
 | `POST /read` `{serial, exchange, frames, max_age_ms, wait_ms}` | the raw frames (1.x contract) |
@@ -199,7 +213,7 @@ SyncPulseScaleBridge.exe autostart [--disable]
 ```text
 SyncPulseScaleBridge.exe                       run the bridge and open its page (default)
 SyncPulseScaleBridge.exe ports                 list COM ports
-SyncPulseScaleBridge.exe detect [--port COM7] [--thorough] [--save NAME] [--json]
+SyncPulseScaleBridge.exe detect [--port COM7] [--thorough] [--wait-print 60] [--listen-only] [--save NAME] [--json]
 SyncPulseScaleBridge.exe monitor --port COM7 --baud 9600 --framing 8N1 [--request "53 49 0D 0A"]
 SyncPulseScaleBridge.exe weight --profile NAME | --port COM7 --protocol mt_sics
 SyncPulseScaleBridge.exe token [--new]

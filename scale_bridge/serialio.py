@@ -223,6 +223,8 @@ class PortWorker(threading.Thread):
         self.last_used = time.monotonic()
         self.first_attempt = threading.Event()
         self._halt = threading.Event()
+        # Called with (t_ms, bytes) for every chunk, outside the lock.
+        self.listeners: list[Callable[[int, bytes], None]] = []
         self.stats = {"opened_at": None, "bytes_rx": 0, "frames_rx": 0, "requests_tx": 0,
                       "open_failures": 0}
 
@@ -270,6 +272,11 @@ class PortWorker(threading.Thread):
             self.chunks.append((t_ms, data))
             self.stats["frames_rx"] += 1
             self.cond.notify_all()
+        for listener in list(self.listeners):
+            try:
+                listener(t_ms, data)
+            except Exception:                                   # noqa: BLE001
+                log.exception("chunk listener failed")
 
     def run(self) -> None:
         s = self.settings

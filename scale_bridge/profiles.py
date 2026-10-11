@@ -118,6 +118,17 @@ def timed_readings(protocol_id: str, params: Optional[dict],
                    chunks: list[tuple[int, bytes]]) -> list[Timed]:
     proto = get_protocol(protocol_id, params)
     out: list[Timed] = []
+    if proto.kind == "print":
+        # A label can arrive in more than one chunk: read them joined, and
+        # date each reading by the chunk that completed it.
+        buf = b""
+        seen = 0
+        for t, data in chunks:
+            buf += data
+            found = proto.readings(buf)
+            out.extend(Timed(t, r) for r in found[seen:])
+            seen = len(found)
+        return out
     for t, data in chunks:
         for r in proto.readings(data):
             out.append(Timed(t, r))
@@ -127,11 +138,14 @@ def timed_readings(protocol_id: str, params: Optional[dict],
 def evaluate(profile: dict, worker: PortWorker, max_age_ms: int, now: int) -> dict[str, Any]:
     """The newest reading, with its stability and unit settled."""
     readings = timed_readings(profile["protocol"], profile.get("params"), worker.recent(RECENT_CHUNKS))
+    printing = is_on_print(profile)
     base = {"ok": False, "profile": profile.get("name"), "port": profile["port"],
-            "protocol": profile["protocol"], "open": worker.is_open}
+            "protocol": profile["protocol"], "open": worker.is_open, "on_print": printing}
     if not readings:
         if not worker.is_open:
             return {**base, "error": worker.last_error or "port is not open"}
+        if printing:
+            return {**base, "error": "waiting for the Print key on the scale"}
         return {**base, "error": "no data from the scale yet" if not worker.recent(1) else
                 "data arrives but no weight could be read from it — check the protocol"}
     latest = readings[-1]
@@ -173,6 +187,8 @@ def evaluate(profile: dict, worker: PortWorker, max_age_ms: int, now: int) -> di
         "measured_at": datetime.fromtimestamp(measured).astimezone().isoformat(timespec="milliseconds"),
         "raw_hex": reading.raw.hex(" ").upper(),
         "checksum_ok": reading.checksum_ok,
+        # e.g. order number, shift and date printed on a label
+        "fields": dict(reading.fields or {}),
     }
 
 
@@ -191,9 +207,17 @@ def ad_hoc(port: str, protocol: str, serial_cfg: Optional[dict] = None,
                      "serial": serial_cfg or {}, "exchange": exchange})
 
 
+def is_on_print(profile: dict) -> bool:
+    proto = PROTOCOLS.get(profile.get("protocol") or "")
+    return bool(proto and proto.kind == "print")
+
+
 def wait_for_reading(profile: dict, worker: PortWorker, max_age_ms: int, wait_ms: int,
                      now_fn) -> dict[str, Any]:
     """Wait (up to wait_ms) until the newest reading is fresh, then evaluate."""
+    if is_on_print(profile):
+        # Nothing comes until somebody presses Print: do not hold the caller.
+        wait_ms = min(wait_ms, 400)
     deadline = time.monotonic() + wait_ms / 1000
     while True:
         worker.wait_fresh(max_age_ms, int(max(0.0, deadline - time.monotonic()) * 1000))

@@ -82,6 +82,15 @@ SyncPulseScaleBridge.exe --simulate mahak_mds,toledo_cont:4800:7E1,mt_sics
 هر نتیجه درصد اطمینان، تنظیم دقیق خط، درخواست، نمونه‌ی داده‌ی خام و خوانش فعلی را دارد. اگر داده‌ی خوانا ولی با قالب
 ناشناخته برسد، همان نمونه گزارش می‌شود تا در زبانه‌ی **تنظیم دستی و مانیتور** تنظیم شود.
 
+### باسکول‌هایی که فقط با کلید «چاپ» می‌فرستند
+
+بسیاری از نمایشگرها — به‌ویژه آن‌هایی که به لیبل‌زن وصل‌اند — تا اپراتور «چاپ» نزند چیزی نمی‌فرستند و بعد کل
+برچسب را می‌فرستند. در «پیدا کردن باسکول» گزینه‌ی **باسکول فقط با زدن کلید چاپ داده می‌فرستد** (و در صورت تمایل
+**فقط گوش بده**) را بزنید و وقتی صفحه خواست، چاپ بزنید. برای چنین باسکولی پل **همیشه** درگاه را باز نگه می‌دارد
+و هر برچسب را ثبت می‌کند: وزن، واحد و بقیه‌ی مقادیر برچسب (شماره سفارش، شیفت، تاریخ …) در فایل
+`labels/<profile>-YYYY-MM-DD.jsonl` و ۵۰۰ مورد آخر از `GET /labels`. برای اینکه لیبل‌زن هم کار کند، رایانه را
+با **کابل Y** وصل کنید: TX باسکول (و زمین) هم به چاپگر و هم به RX رایانه؛ رایانه روی این خط چیزی نمی‌فرستد.
+
 ## قالب‌های پشتیبانی‌شده
 
 <div dir="ltr">
@@ -99,6 +108,7 @@ SyncPulseScaleBridge.exe --simulate mahak_mds,toledo_cont:4800:7E1,mt_sics
 | `xk3190_tf0` | XK3190 continuous (tF=0, XOR checksum) | continuous |
 | `xk3190_reversed` | XK3190 `=` reversed-digit stream (tF=2/3) | continuous |
 | `mahak_mds` | Mahak MDS binary (`4D 09 04 07`) — tested on real hardware | on request |
+| `label_print` | label printer stream: TSPL / EPL2 / ZPL — tested on real hardware (PTC400) | on Print key |
 | `ascii_generic` | any readable line with a number and a unit | continuous |
 | `custom_binary` / `custom_ascii` | your own binary frame / regular expression | either |
 

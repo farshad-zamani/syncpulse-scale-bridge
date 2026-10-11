@@ -42,6 +42,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from . import ABOUT, PRODUCT, SERVICE_ID, __version__, profiles, winutil
 from .config import Config
 from .detect import Detector, Timings
+from .labels import Keeper, LabelLog, labels_folder, on_print
 from .protocols import PROTOCOLS, catalogue_info, get_protocol
 from .serialio import (RING_SIZE, LineSettings, Opener, PortBusy, Registry, format_hex,
                        list_serial_ports, now_ms, open_real, printable)
@@ -60,7 +61,8 @@ def _framing_ok(text: str) -> bool:
 
 
 class DetectionJob:
-    def __init__(self, bridge: "Bridge", ports: list[str], thorough: bool):
+    def __init__(self, bridge: "Bridge", ports: list[str], thorough: bool,
+                 print_wait_s: float = 0, listen_only: bool = False):
         self.id = uuid.uuid4().hex[:12]
         self.bridge = bridge
         self.ports = ports
@@ -73,7 +75,10 @@ class DetectionJob:
         self.started = time.time()
         self.finished: Optional[float] = None
         self.detector = Detector(bridge.opener, log=self._add, cancelled=self.cancel.is_set,
-                                 thorough=thorough, timings=bridge.detect_timings)
+                                 thorough=thorough, timings=bridge.detect_timings,
+                                 print_wait_s=print_wait_s, listen_only=listen_only)
+        self.print_wait_s = print_wait_s
+        self.listen_only = listen_only
         self.thread = threading.Thread(target=self._run, name="detect", daemon=True)
 
     def _add(self, code: str, **details: Any) -> None:
@@ -114,7 +119,8 @@ class DetectionJob:
             else:
                 progress = 1.0
             return {"id": self.id, "running": self.running, "ports": self.ports,
-                    "thorough": self.thorough, "progress": round(progress, 3),
+                    "thorough": self.thorough, "print_wait_s": self.print_wait_s,
+                    "listen_only": self.listen_only, "progress": round(progress, 3),
                     "log": self.log[since:], "log_size": len(self.log),
                     "results": list(self.results),
                     "elapsed_s": round((self.finished or time.time()) - self.started, 1)}
@@ -134,6 +140,10 @@ class Bridge:
         self.started = time.time()
         self.listen_port = config.listen_port
         self.detect_timings: Optional[Timings] = None
+        # Print-only scales: keep their ports open and log every label.
+        self.labels = LabelLog(labels_folder(config.path))
+        self.keeper = Keeper(self.registry, config.profiles, self.labels)
+        self.keeper.start()
 
     # -- ports and status --------------------------------------------------
     def ports(self) -> list[dict]:
@@ -171,6 +181,18 @@ class Bridge:
         result = profiles.wait_for_reading(profile, worker, max_age_ms, wait_ms, now_ms)
         worker.touch()
         return result
+
+    def label_list(self, query: dict) -> dict:
+        name = str(query.get("profile") or "").strip() or None
+        if name and self.config.profile(name) is None:
+            raise LookupError(f"no profile named {name!r}")
+        if name:
+            name = self.config.profile(name)["name"]
+        after = int(query.get("after") or 0)
+        limit = min(max(int(query.get("limit") or 100), 1), 500)
+        records = self.labels.list(name, after, limit)
+        return {"ok": True, "labels": records, "last_seq": self.labels.seq,
+                "listening": [p["name"] for p in self.config.profiles() if on_print(p)]}
 
     def resolve_profile(self, query: dict) -> dict:
         """A saved profile by name, or one built from the request."""
@@ -237,7 +259,8 @@ class Bridge:
                 "guesses": guesses}
 
     # -- auto-detection ----------------------------------------------------
-    def start_detection(self, ports: Optional[list[str]], thorough: bool, bluetooth: bool) -> DetectionJob:
+    def start_detection(self, ports: Optional[list[str]], thorough: bool, bluetooth: bool,
+                        print_wait_s: float = 0, listen_only: bool = False) -> DetectionJob:
         with self.job_lock:
             if self.job and self.job.running:
                 raise PortBusy("auto-detection is already running")
@@ -255,7 +278,8 @@ class Bridge:
             if not chosen:
                 raise ValueError("no COM ports to search — is the USB-serial adapter plugged in "
                                  "and its driver installed?")
-            self.job = DetectionJob(self, chosen, thorough)
+            self.job = DetectionJob(self, chosen, thorough, min(max(float(print_wait_s or 0), 0), 300),
+                                    listen_only)
             self.job.start()
             return self.job
 
@@ -445,6 +469,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, b.read_raw(self._body()))
         elif path == "/profiles" and method == "GET":
             self._send(200, {"ok": True, "profiles": b.config.profiles()})
+        elif path == "/labels" and method == "GET":
+            self._send(200, b.label_list(query))
         elif path == "/weight" and method in ("GET", "POST"):
             body = query if method == "GET" else {**query, **self._body()}
             profile = b.resolve_profile(body)
@@ -470,6 +496,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/weight":
                 profile = b.resolve_profile(query)
                 self._send(200, b.weight(profile, *self._timing(query)))
+            elif path == "/api/labels":
+                self._send(200, b.label_list(query))
             elif path == "/api/monitor":
                 self._send(200, b.monitor(query))
             elif path == "/api/detect":
@@ -493,7 +521,8 @@ class Handler(BaseHTTPRequestHandler):
         body = self._body()
         if path == "/api/detect":
             job = b.start_detection(body.get("ports") or None, bool(body.get("thorough")),
-                                    bool(body.get("bluetooth")))
+                                    bool(body.get("bluetooth")), body.get("print_wait_s") or 0,
+                                    bool(body.get("listen_only")))
             self._send(200, {"ok": True, "job": job.status()})
         elif path == "/api/detect/cancel":
             if b.job and b.job.running:
@@ -509,6 +538,7 @@ class Handler(BaseHTTPRequestHandler):
                 profile = body
             saved = b.config.save_profile(profile)
             b.registry.release(saved["port"])
+            b.keeper.tick()
             self._send(200, {"ok": True, "profile": saved, "profiles": b.config.profiles()})
         elif path == "/api/token":
             self._send(200, {"ok": True, "token": b.config.rotate_token()})

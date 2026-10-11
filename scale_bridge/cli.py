@@ -47,6 +47,9 @@ LOG_TEXT = {
     "found": "  FOUND {protocol} at {baud} {framing}: {value} {unit}",
     "not_found": "  nothing recognised on {port}",
     "open_failed": "  cannot open {port}: {error}",
+    "press_print": "  >>> Press PRINT on the scale now (listening at {baud} for {seconds} s)",
+    "print_wrong_speed": "  data at {baud} was not readable - press PRINT again (next speed)",
+    "print_timeout": "  nothing arrived while waiting for PRINT",
 }
 
 
@@ -130,14 +133,18 @@ def cmd_detect(args, config: Config) -> int:
                 say(f"  {code} {kw}")
 
     say(f"{PRODUCT} {__version__} - auto-detection ({'thorough' if args.thorough else 'quick'}); "
-        f"read-only requests only.")
-    results = Detector(opener, log=show, thorough=args.thorough).run(ports)
+        + ("listen only: nothing is sent." if args.listen_only else "read-only requests only."))
+    results = Detector(opener, log=show, thorough=args.thorough, print_wait_s=args.wait_print,
+                       listen_only=args.listen_only).run(ports)
     say()
     found = [r for r in results if r.get("found")]
     for r in results:
         if r.get("found"):
             s = r["serial"]
             reading = r["reading"]
+            fields = reading.get("fields") or {}
+            if fields:
+                say(f"{r['port']}: label fields: " + ", ".join(f"{k}={v}" for k, v in fields.items()))
             say(f"{r['port']}: {r['protocol_name']}  {s['baudrate']} {s['bytesize']}{s['parity']}{s['stopbits']}"
                 f"  request={r['exchange']['request_hex'] or '-'}  weight={reading['value']} {reading['unit']}"
                 f"  confidence={int(r['confidence'] * 100)}%")
@@ -351,6 +358,10 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--port", dest="ports", action="append", help="only this port (repeatable)")
     d.add_argument("--thorough", action="store_true", help="more speeds and framings (slower)")
     d.add_argument("--bluetooth", action="store_true", help="also search Bluetooth serial ports")
+    d.add_argument("--wait-print", type=float, default=0, metavar="SECONDS",
+                   help="the scale sends only on its Print key: wait this long for a press")
+    d.add_argument("--listen-only", action="store_true",
+                   help="never send anything to the device (skip asking)")
     d.add_argument("--save", metavar="NAME", help="save what is found as a profile")
     d.add_argument("--json", action="store_true", help="print the full results as JSON")
     m = sub.add_parser("monitor", parents=[common], help="show the raw bytes on a port")

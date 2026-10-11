@@ -9,9 +9,16 @@ Auto-detection: find how the scale on a COM port talks.
    parity (7E1/7O1), and the port is listened to again that way. Whatever
    arrives is matched against every continuous format in the library.
 
-2. ASK — if nothing useful was heard, each read-only request in the library
+2. WAIT FOR PRINT (optional) — some indicators send only when their Print
+   key is pressed (e.g. those wired to a label printer). The port is held
+   open at one speed until something arrives; garbage means another speed,
+   so the next press is awaited at the next one. Parity is read from the
+   bytes themselves, so one press is enough for 7E1/7O1 too.
+
+3. ASK — if nothing useful was heard, each read-only request in the library
    is sent at each speed and framing, and the reply is matched against the
    protocol that was asked. A reply is confirmed by asking a second time.
+   `listen_only` skips this step: then nothing at all is sent to the device.
 
 Everything is reported step by step through `log(code, **details)`, so the
 user interface can show (and translate) what is happening.
@@ -67,8 +74,11 @@ def _confidence(protocol_id: str, readings: list[Reading]) -> float:
 class Detector:
     def __init__(self, opener: Opener, log: Callable[..., None] = lambda code, **kw: None,
                  cancelled: Callable[[], bool] = lambda: False, thorough: bool = False,
-                 timings: Optional[Timings] = None):
+                 timings: Optional[Timings] = None, print_wait_s: float = 0,
+                 listen_only: bool = False):
         self.opener = opener
+        self.print_wait_s = max(0.0, float(print_wait_s or 0))
+        self.listen_only = listen_only
         self.log = log
         self.cancelled = cancelled
         self.thorough = thorough
@@ -110,7 +120,7 @@ class Detector:
         for pid in CONTINUOUS_IDS:
             readings = PROTOCOLS[pid].readings(data)
             numeric = [r for r in readings if r.value is not None or r.overload]
-            if len(numeric) < 2:
+            if len(numeric) < max(1, PROTOCOLS[pid].min_frames):
                 continue
             key = (PROTOCOLS[pid].specificity, len(numeric))
             if best is None or key > best[0]:
@@ -161,6 +171,69 @@ class Detector:
                 if readability(sample) >= 0.85 and unknown is None:
                     unknown = {"baud": baud, "framing": framing, "sample_hex": format_hex(sample[:96]),
                                "sample_text": printable(sample[:96])}
+        return None, unknown
+
+    def _until_quiet(self, settings: LineSettings, wait_s: float, quiet_s: float = 0.8) -> bytes:
+        """Hold the port open until data arrives (or wait_s passes), then until it goes quiet."""
+        ser = self.opener(settings)
+        try:
+            buf = bytearray()
+            deadline = time.monotonic() + wait_s
+            last = 0.0
+            while not self.cancelled():
+                waiting = ser.in_waiting
+                chunk = ser.read(waiting if waiting else 1)
+                now = time.monotonic()
+                if chunk:
+                    buf += chunk
+                    last = now
+                elif buf and now - last >= quiet_s:
+                    break
+                elif not buf and now >= deadline:
+                    break
+            return bytes(buf)
+        finally:
+            ser.close()
+
+    @staticmethod
+    def _seven_bit(data: bytes) -> tuple[str, bytes]:
+        """7 data bits read as 8: bit 7 is the parity bit, which tells even from odd."""
+        even = sum(1 for b in data if (bin(b & 0x7F).count("1") + (b >> 7)) % 2 == 0)
+        framing = "7E1" if even >= len(data) / 2 else "7O1"
+        return framing, bytes(b & 0x7F for b in data)
+
+    def _await_print(self, port: str) -> tuple[Optional[dict], Optional[dict]]:
+        unknown = None
+        for baud in PASSIVE_BAUDS:
+            if self.cancelled():
+                break
+            settings = LineSettings(port, baud)
+            self.log("press_print", port=port, baud=baud, seconds=int(self.print_wait_s))
+            try:
+                data = self._until_quiet(settings, self.print_wait_s)
+            except Exception as e:                              # noqa: BLE001
+                self.log("open_failed", port=port, error=str(e))
+                return {"error": str(e)}, None
+            if not data:
+                if not self.cancelled():
+                    self.log("print_timeout", port=port)
+                break
+            r8, r7 = readability(data), readability(data, mask7=True)
+            self.log("heard", port=port, baud=baud, bytes=len(data), readable=round(r8, 2),
+                     readable7=round(r7, 2))
+            framing, sample = "8N1", data
+            if r8 < 0.85 and r7 >= 0.9:
+                framing, sample = self._seven_bit(data)
+            match = self._match_continuous(sample)
+            if match:
+                pid, readings = match
+                return self._result(port, pid, settings.with_line(baud, framing), readings, sample,
+                                    mode="print"), None
+            if readability(sample) >= 0.85:
+                unknown = {"baud": baud, "framing": framing, "sample_hex": format_hex(sample[:96]),
+                           "sample_text": printable(sample[:96])}
+                break
+            self.log("print_wrong_speed", port=port, baud=baud)
         return None, unknown
 
     def _active(self, port: str) -> tuple[Optional[dict], Optional[dict]]:
@@ -242,7 +315,11 @@ class Detector:
         result, unknown = self._passive(port)
         if result and result.get("error"):
             return {"port": port, "found": False, "error": result["error"]}
-        if result is None and not self.cancelled():
+        if result is None and self.print_wait_s and not unknown and not self.cancelled():
+            result, unknown = self._await_print(port)
+            if result and result.get("error"):
+                return {"port": port, "found": False, "error": result["error"]}
+        if result is None and not self.listen_only and not self.cancelled():
             result, unknown_active = self._active(port)
             if result and result.get("error"):
                 return {"port": port, "found": False, "error": result["error"]}

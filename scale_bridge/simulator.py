@@ -72,6 +72,16 @@ def frame_for(protocol: str, kg: float, stable: bool) -> bytes:
         return b"\x02" + body + f"{x >> 4:X}{x & 0xF:X}".encode() + b"\x03"
     if protocol == "xk3190_reversed":
         return f"{kg:08.3f}"[::-1].encode() + b"="
+    if protocol == "label_print":
+        # What a PTC400 indicator sends to its TSC label printer on Print (TSPL).
+        w = f"{kg:7.3f}"
+        return ('CLS\r\nSIZE 57 mm, 40 mm\r\nGAP 2 mm,0\r\nDIRECTION 1\r\nREFERENCE 0,0\r\n'
+                'CODEPAGE IranII\r\nTEXT 300,250,"10",270,1,1,"No: 6 SHIFT:2"\r\n'
+                'TEXT 030,235,"10",0,1,2,"Order.Co :   222\r\n'
+                'TEXT 030,080,"10",0,1,2,"1405/07/19 - 16:44"\r\n'
+                'TEXT 030,160,"10",0,1,2,"Thickness : 0.0"\r\n'
+                f'TEXT 020,000,"10",0,2,2,"{w}"\r\nTEXT 200,015,"10",0,2,1,"(Kg)"\r\n'
+                f'BARCODE 350,280, "128",070,1,270,2,2, "  222\t{w}"\r\nPRINT 1\r\n\r\n').encode()
     if protocol == "mahak_mds":
         grams = round(kg * 1000)
         return bytes([0x58, (grams * 7 + 0x51) & 0xFF, 0x07, 0x07]) + grams.to_bytes(3, "big")
@@ -82,6 +92,9 @@ class SimulatedDevice:
     """Quacks like a pyserial Serial for what the bridge uses."""
 
     CONTINUOUS = {"toledo_cont", "xk3190_tf0", "xk3190_reversed", "ascii_generic"}
+    # Sends only when somebody presses Print — here every PRINT_EVERY_S seconds.
+    ON_PRINT = {"label_print"}
+    PRINT_EVERY_S = 3.0
     REQUESTS = {"mt_sics": b"SI\r\n", "and_std": b"Q\r\n", "sma": b"\nW\r", "nci": b"W\r",
                 "ohaus": b"IP\r\n", "sartorius": b"\x1bP\r\n", "mahak_mds": bytes.fromhex("4D090407"),
                 "cas_enq": b"\x05"}
@@ -96,7 +109,7 @@ class SimulatedDevice:
         self._t0 = time.monotonic()
         self._out = bytearray()
         self._due: list[tuple[float, bytes]] = []
-        self._next_emit = time.monotonic()
+        self._next_emit = time.monotonic() + (self.PRINT_EVERY_S if protocol in self.ON_PRINT else 0)
         self._next_boot = time.monotonic() + 60
         self._garbage_seed = 0x5A
 
@@ -132,6 +145,10 @@ class SimulatedDevice:
             kg, stable = weight_now(self._t0)
             self._out += self._as_received(frame_for(self.protocol, kg, stable))
             self._next_emit = now + 0.2
+        if self.protocol in self.ON_PRINT and now >= self._next_emit:
+            kg, _ = weight_now(self._t0)
+            self._out += self._as_received(frame_for(self.protocol, kg, True))
+            self._next_emit = now + self.PRINT_EVERY_S
         if self.protocol == "mahak_mds" and now >= self._next_boot:
             self._out += self._as_received(self.BOOT)
             self._next_boot = now + 60

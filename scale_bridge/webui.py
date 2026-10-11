@@ -150,6 +150,14 @@ en:{
  find_intro:'The program listens to each port at every common speed, then asks the scale in the languages of the major manufacturers. Only read-only requests are sent: it never zeroes, tares or prints.',
  ports:'COM ports', no_ports:'No COM port on this PC. Plug in the USB-serial adapter and check its driver in Device Manager.',
  refresh:'Refresh', thorough:'Thorough search (more speeds and framings, slower)',
+ wait_print:'The scale sends only when Print is pressed (e.g. wired to a label printer) — wait for me to press it',
+ listen_only:'Listen only — never send anything to the scale',
+ log_press_print:'{port}: ▶ press PRINT on the scale now — listening at {baud} for {seconds} s',
+ log_print_wrong_speed:'{port}: data at {baud} was not readable — press PRINT again (trying the next speed)',
+ log_print_timeout:'{port}: nothing arrived while waiting for Print',
+ mode_print:'sends when Print is pressed', printed:'printed {ago}', last_labels:'Last printed labels',
+ listening_all_day:'Listening all the time: every printed label is recorded.',
+ ago_s:'{n} s ago', ago_m:'{n} min ago', ago_h:'{n} h ago', no_labels:'No label printed yet.',
  start:'Start search', cancel:'Cancel', running:'Searching…', results:'Results',
  found_on:'Scale found on {port}', not_found_on:'No scale recognised on {port}', confidence:'confidence',
  protocol:'Protocol', line:'Line', mode:'Mode', reading:'Reading', sample:'What arrived',
@@ -194,7 +202,7 @@ en:{
  as_sent:'as sent', stable_samples:'Equal readings = stable',
  proto_title:'Protocol library', proto_intro:'Formats the program can read. Tested on real hardware are marked; the others follow the manufacturers\' published formats and are covered by tests with their sample frames. The same data format is used by many other brands.',
  families:'Used by', request_col:'Request', kind:'Type', reference:'Reference',
- kind_continuous:'continuous', kind_poll:'on request', kind_handshake:'handshake',
+ kind_continuous:'continuous', kind_poll:'on request', kind_handshake:'handshake', kind_print:'on Print key',
  about_title:'About', about_text:'SyncPulse Scale Bridge connects weighing scales with an RS-232 serial port to computers and networks. Copy the single program file to the PC beside the scale, run it, and it finds the port, the speed and the protocol by itself, shows the live weight and serves it on the local network.',
  about_platform:'It was written for SyncPulse, a platform for digital forms, production records and reporting, where the weight goes straight into the form a worker is filling in. It is free software and works with any other system through its simple HTTP/JSON interface.',
  author:'Author', company:'Company', website:'Website', license:'License', source:'Source code', version:'Version',
@@ -214,6 +222,14 @@ fa:{
  find_intro:'برنامه روی هر درگاه با همه‌ی سرعت‌های رایج گوش می‌دهد و سپس با زبان سازنده‌های اصلی از باسکول وزن می‌خواهد. فقط درخواست‌های خواندنی فرستاده می‌شود: هیچ‌وقت صفر، تار یا چاپ نمی‌کند.',
  ports:'درگاه‌های COM', no_ports:'درگاه COM روی این رایانه نیست. مبدل USB به سریال را وصل کنید و درایور آن را در Device Manager بررسی کنید.',
  refresh:'بازخوانی', thorough:'جستجوی کامل (سرعت‌ها و قالب‌های بیشتر، کندتر)',
+ wait_print:'باسکول فقط با زدن کلید چاپ داده می‌فرستد (مثلاً وصل به لیبل‌زن) — منتظر بمان تا چاپ بزنم',
+ listen_only:'فقط گوش بده — هیچ چیزی به باسکول فرستاده نشود',
+ log_press_print:'{port}: ▶ همین حالا کلید چاپ باسکول را بزنید — گوش دادن با {baud} تا {seconds} ثانیه',
+ log_print_wrong_speed:'{port}: داده با سرعت {baud} خوانا نبود — دوباره چاپ بزنید (سرعت بعدی)',
+ log_print_timeout:'{port}: در زمان انتظار برای چاپ چیزی نرسید',
+ mode_print:'با زدن کلید چاپ می‌فرستد', printed:'چاپ‌شده {ago}', last_labels:'آخرین برچسب‌های چاپ‌شده',
+ listening_all_day:'همیشه در حال گوش دادن: هر برچسبی که چاپ شود ثبت می‌شود.',
+ ago_s:'{n} ثانیه پیش', ago_m:'{n} دقیقه پیش', ago_h:'{n} ساعت پیش', no_labels:'هنوز برچسبی چاپ نشده است.',
  start:'شروع جستجو', cancel:'لغو', running:'در حال جستجو…', results:'نتیجه',
  found_on:'باسکول روی {port} پیدا شد', not_found_on:'روی {port} باسکولی شناخته نشد', confidence:'اطمینان',
  protocol:'پروتکل', line:'تنظیم خط', mode:'روش', reading:'خوانش', sample:'داده‌ی دریافتی',
@@ -258,7 +274,7 @@ fa:{
  as_sent:'همان‌طور که می‌رسد', stable_samples:'تعداد خوانش برابر = پایدار',
  proto_title:'کتابخانه‌ی پروتکل‌ها', proto_intro:'قالب‌هایی که برنامه می‌خواند. موارد آزموده روی دستگاه واقعی علامت دارند؛ بقیه بر پایه‌ی قالب‌های منتشرشده‌ی سازندگان‌اند و با فریم‌های نمونه‌ی همان مستندات آزمایش شده‌اند. بسیاری از برندهای دیگر هم از همین قالب‌ها استفاده می‌کنند.',
  families:'کاربرد', request_col:'درخواست', kind:'نوع', reference:'مرجع',
- kind_continuous:'پیوسته', kind_poll:'با درخواست', kind_handshake:'دست‌دادن',
+ kind_continuous:'پیوسته', kind_poll:'با درخواست', kind_handshake:'دست‌دادن', kind_print:'با کلید چاپ',
  about_title:'درباره', about_text:'SyncPulse Scale Bridge باسکول‌های دارای درگاه سریال RS-232 را به رایانه و شبکه وصل می‌کند. تنها فایل برنامه را روی رایانه‌ی کنار باسکول کپی و اجرا کنید؛ درگاه، سرعت و پروتکل را خودش پیدا می‌کند، وزن زنده را نشان می‌دهد و روی شبکه‌ی محلی در اختیار می‌گذارد.',
  about_platform:'این برنامه برای SyncPulse نوشته شده است؛ پلتفرم فرم‌های دیجیتال، سوابق تولید و گزارش‌گیری که وزن را مستقیم در فرمی که کارگر پر می‌کند می‌نشاند. نرم‌افزار آزاد است و با رابط ساده‌ی HTTP/JSON با هر سامانه‌ی دیگری هم کار می‌کند.',
  author:'سازنده', company:'شرکت', website:'وب‌سایت', license:'مجوز', source:'کد منبع', version:'نسخه',
@@ -354,6 +370,9 @@ function renderScales() {
         <span class="tag ltr">${esc(p.port)}</span></div>
       <div class="weight" id="w-${esc(p.name)}">—</div>
       <div class="state" id="s-${esc(p.name)}"><span class="dot"></span><span>${esc(t('no_data'))}</span></div>
+      <div class="kv small" id="f-${esc(p.name)}" style="margin-top:8px"></div>
+      ${isPrint(p) ? `<p class="small muted" style="margin:8px 0 0">${esc(t('listening_all_day'))}</p>
+        <details style="margin-top:6px"><summary class="small">${esc(t('last_labels'))}</summary><div class="small" id="l-${esc(p.name)}"></div></details>` : ''}
       <div class="kv small" style="margin-top:10px">
         <b>${esc(t('protocol'))}</b><span><bdi>${esc(protoName(p.protocol))}</bdi></span>
         <b>${esc(t('line'))}</b><span class="mono">${esc(lineText(p.serial))}</span>
@@ -377,18 +396,40 @@ function paintWeight(name) {
   }
   vEl.innerHTML = w.overload && (w.value === null || w.value === undefined) ? esc(t('overload'))
     : `${fmtValue(w.value)}<small>${esc(w.unit || '')}</small>`;
+  const fEl = document.getElementById('f-' + name);
+  if (fEl) fEl.innerHTML = Object.entries(w.fields || {}).filter(([k]) => k !== 'barcode')
+    .map(([k, v]) => `<b class="ltr">${esc(k)}</b><span class="mono">${esc(v)}</span>`).join('');
   let cls = 'warn', label = t('moving');
-  if (w.stale) { cls = ''; label = t('stale'); } else if (w.stable) { cls = 'ok'; label = t('stable'); }
+  const profile = (S.state.profiles || []).find(p => p.name === name);
+  if (profile && isPrint(profile)) { cls = 'ok'; label = t('printed', {ago: ago(w.age_ms)}); }
+  else if (w.stale) { cls = ''; label = t('stale'); } else if (w.stable) { cls = 'ok'; label = t('stable'); }
   const extra = w.net === true ? ' · ' + t('net') : (w.net === false ? ' · ' + t('gross') : '');
   sEl.innerHTML = `<span class="dot ${cls}"></span><span>${esc(label + extra)}</span>`;
+}
+function isPrint(p) { const proto = S.protocols.find(x => x.id === p.protocol); return !!(proto && proto.kind === 'print'); }
+function ago(ms) {
+  const s = Math.max(0, Math.round((ms || 0) / 1000));
+  return s < 90 ? t('ago_s', {n: s}) : (s < 5400 ? t('ago_m', {n: Math.round(s / 60)}) : t('ago_h', {n: Math.round(s / 3600)}));
+}
+async function paintLabels(name) {
+  const el = document.getElementById('l-' + name); if (!el) return;
+  const r = await api('/api/labels?profile=' + encodeURIComponent(name) + '&limit=8');
+  if (!r.ok) return;
+  el.innerHTML = r.labels.length ? '<table><tbody>' + r.labels.slice().reverse().map(l => `<tr>
+    <td class="mono">${esc(l.at.slice(11, 19))}</td><td class="mono"><b>${fmtValue(l.value)}</b> ${esc(l.unit)}</td>
+    <td class="small">${esc(Object.entries(l.fields || {}).filter(([k]) => !['barcode', 'date', 'time'].includes(k)).map(([k, v]) => k + ': ' + v).join(' · '))}</td></tr>`).join('') + '</tbody></table>'
+    : `<p class="muted">${esc(t('no_labels'))}</p>`;
 }
 async function pollWeights() {
   if (S.tab === 'scales' && S.state && !document.hidden) {
     for (const p of S.state.profiles || []) {
       if (S.inflight[p.name]) continue;
       S.inflight[p.name] = true;
-      api('/api/weight?profile=' + encodeURIComponent(p.name) + '&wait_ms=1500').then(r => {
+      // A print-only scale is silent between labels: show the last label, however old.
+      const extra = isPrint(p) ? '&wait_ms=200&max_age_ms=60000000' : '&wait_ms=1500';
+      api('/api/weight?profile=' + encodeURIComponent(p.name) + extra).then(r => {
         S.weights[p.name] = r; paintWeight(p.name);
+        if (isPrint(p)) return paintLabels(p.name);
       }).finally(() => { S.inflight[p.name] = false; });
     }
   }
@@ -405,6 +446,8 @@ function renderFind() {
   const job = S.job; const running = job && job.running;
   const checked = S.sel || new Set(S.ports.filter(p => p.kind !== 'bluetooth').map(p => p.device));
   const thorough = $('#thorough') ? $('#thorough').checked : false;
+  const waitPrint = $('#waitPrint') ? $('#waitPrint').checked : false;
+  const listenOnly = $('#listenOnly') ? $('#listenOnly').checked : false;
   const ports = S.ports.length ? S.ports.map(p => `
     <label class="check"><input type="checkbox" name="port" value="${esc(p.device)}" ${checked.has(p.device) ? 'checked' : ''} ${running ? 'disabled' : ''}>
       <span><b class="ltr">${esc(p.device)}</b> <span class="muted">${esc(p.description || '')}</span>
@@ -416,6 +459,8 @@ function renderFind() {
       <h3>${esc(t('ports'))}</h3>${ports}
       <div class="row" style="margin-top:10px">
         <label class="row small"><input type="checkbox" id="thorough" ${thorough ? 'checked' : ''} ${running ? 'disabled' : ''}> ${esc(t('thorough'))}</label>
+        <label class="row small"><input type="checkbox" id="waitPrint" ${waitPrint ? 'checked' : ''} ${running ? 'disabled' : ''}> ${esc(t('wait_print'))}</label>
+        <label class="row small"><input type="checkbox" id="listenOnly" ${listenOnly ? 'checked' : ''} ${running ? 'disabled' : ''}> ${esc(t('listen_only'))}</label>
         <div class="spacer"></div>
         <button class="btn" id="refreshPorts" ${running ? 'disabled' : ''}>${esc(t('refresh'))}</button>
         ${running ? `<button class="btn danger" id="cancelDetect">${esc(t('cancel'))}</button>`
@@ -501,7 +546,8 @@ async function startDetect() {
   const ports = [...document.querySelectorAll('input[name=port]:checked')].map(i => i.value);
   if (!ports.length) return;
   S.log = []; S.jobSince = 0; S.draft = {};
-  const r = await api('/api/detect', {body: {ports, thorough: $('#thorough').checked, bluetooth: true}});
+  const r = await api('/api/detect', {body: {ports, thorough: $('#thorough').checked, bluetooth: true,
+    print_wait_s: $('#waitPrint').checked ? 60 : 0, listen_only: $('#listenOnly').checked}});
   if (!r.ok) { toast(t('failed', {error: r.error})); return; }
   S.job = r.job; renderFind(); setTimeout(pollDetect, 300);
 }

@@ -68,11 +68,16 @@ class Reading:
     overload: bool = False
     raw: bytes = b""
     checksum_ok: Optional[bool] = None
+    # Other values the frame carries (e.g. the order number on a label).
+    fields: dict = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
-        return {"value": self.value, "unit": self.unit, "stable": self.stable, "net": self.net,
-                "overload": self.overload, "raw_hex": self.raw.hex(" ").upper(),
-                "checksum_ok": self.checksum_ok}
+        out = {"value": self.value, "unit": self.unit, "stable": self.stable, "net": self.net,
+               "overload": self.overload, "raw_hex": self.raw.hex(" ").upper(),
+               "checksum_ok": self.checksum_ok}
+        if self.fields:
+            out["fields"] = dict(self.fields)
+        return out
 
 
 @dataclass
@@ -87,6 +92,9 @@ class Protocol:
     field_tested: bool = False
     specificity: int = 2          # 1 generic … 3 strictly framed (wins ties in detection)
     default_poll_ms: int = 500
+    # Readings auto-detection needs to see. A device that only sends when its
+    # Print key is pressed may send just one.
+    min_frames: int = 2
     params: dict = field(default_factory=dict)
 
     def readings(self, data: bytes) -> list[Reading]:     # pragma: no cover - abstract
@@ -94,6 +102,7 @@ class Protocol:
 
     def info(self) -> dict[str, Any]:
         return {"id": self.id, "name": self.name, "kind": self.kind,
+                "on_print": self.kind == "print",
                 "request_hex": self.request.hex(" ").upper(),
                 "after_ack_hex": self.after_ack.hex(" ").upper(),
                 "families": self.families, "reference": self.reference,
@@ -350,6 +359,110 @@ class MahakMds(Protocol):
 
 
 # ---------------------------------------------------------------------------
+# Label printer streams — indicators wired to a label printer
+# ---------------------------------------------------------------------------
+
+_KV = re.compile(r"([A-Za-z][A-Za-z0-9_.]*)\s*:\s*(.*?)(?=\s+[A-Za-z][A-Za-z0-9_.]*\s*:|$)")
+_DATE = re.compile(r"\b(\d{2,4}[/.-]\d{1,2}[/.-]\d{1,4})\b(?:\s*-?\s*(\d{1,2}:\d{2}(?::\d{2})?))?")
+_NUMBER = re.compile(r"^[-+]?\s*\d+(?:[.,]\d+)?$")
+_NUMBER_UNIT = re.compile(r"^([-+]?\s*\d+(?:[.,]\d+)?)\s*\(?\s*(kg|g|t|lb|lbs|oz)\s*\)?$", re.I)
+_WEIGHT_WORD = re.compile(r"(weight|wt|net|gross|n\.?w|g\.?w|\u0648\u0632\u0646)\s*[:=]?\s*([-+]?\d+(?:[.,]\d+)?)\s*\(?\s*(kg|g|t|lb|oz)?",
+                          re.I)
+
+
+def _unit_only(text: str) -> str:
+    t = text.strip().strip("()[]").strip()
+    return norm_unit(t) if norm_unit(t) in GRAMS_PER else ""
+
+
+class LabelPrinter(Protocol):
+    """
+    An indicator that prints labels: on its Print key it sends the whole label
+    program to a label printer — TSPL/TSPL2 (TSC and compatibles), EPL2 (Zebra/
+    Eltron, Argox) or ZPL (Zebra). Listening to that line (a Y cable leaves the
+    printer connected) gives the weight the operator printed, plus whatever
+    else the label carries: order number, shift, date, thickness …
+
+    One reading per printed label (TSPL `PRINT`, EPL `P`, ZPL `^XZ`). The weight
+    is the number printed next to a weight unit — "141.800" followed by "(Kg)",
+    or "1.25 kg" in one text — or after a word such as Weight/Net/Gross/وزن.
+    A printed weight counts as stable: indicators print settled weights.
+    """
+    _tspl_text = re.compile(rb'^(?:TEXT|BLOCK)\s[^"]*"[^"]*"[^"]*?"(.*?)"?\s*$')
+    _tspl_barcode = re.compile(rb'^BARCODE\s[^"]*"[^"]*"[^"]*?"(.*?)"?\s*$')
+    _epl_text = re.compile(rb'^A\d+,\d+,[^"]*"(.*?)"?\s*$')
+    _epl_barcode = re.compile(rb'^B\d+,\d+,[^"]*"(.*?)"?\s*$')
+    _zpl_field = re.compile(rb"\^FD(.*?)\^FS", re.S)
+    _end = re.compile(rb"(?:^|[\r\n])(?:PRINT\s+\d+(?:\s*,\s*\d+)?|P\d+(?:,\d+)?)\s*(?=[\r\n]|$)|\^XZ")
+
+    def _texts(self, label: bytes) -> tuple[list[str], list[str]]:
+        texts: list[str] = []
+        codes: list[str] = []
+        if b"^FD" in label:
+            for m in self._zpl_field.finditer(label):
+                texts.append(m.group(1).decode("latin-1"))
+            return texts, codes
+        for line in re.split(rb"[\r\n]+", label):
+            line = line.strip()
+            for rx, bucket in ((self._tspl_text, texts), (self._tspl_barcode, codes),
+                               (self._epl_text, texts), (self._epl_barcode, codes)):
+                m = rx.match(line)
+                if m:
+                    bucket.append(m.group(1).decode("latin-1"))
+                    break
+        return texts, codes
+
+    def _weight(self, texts: list[str]) -> Optional[tuple[float, str]]:
+        clean = [t.strip() for t in texts]
+        for i, t in enumerate(clean):
+            m = _NUMBER_UNIT.match(t)
+            if m:
+                return _num(m.group(1).encode()), norm_unit(m.group(2))
+            if _NUMBER.match(t):
+                for j in (i + 1, i - 1):
+                    if 0 <= j < len(clean) and _unit_only(clean[j]):
+                        return _num(t.encode()), _unit_only(clean[j])
+        for t in clean:
+            m = _WEIGHT_WORD.search(t)
+            if m:
+                return _num(m.group(2).encode()), norm_unit(m.group(3) or "")
+        return None
+
+    @staticmethod
+    def _fields(texts: list[str], codes: list[str]) -> dict:
+        fields: dict[str, str] = {}
+        for t in texts:
+            d = _DATE.search(t)
+            if d and "date" not in fields:
+                fields["date"] = d.group(1)
+                if d.group(2):
+                    fields["time"] = d.group(2)
+                continue
+            for key, value in _KV.findall(t):
+                value = value.strip().strip('"').strip()
+                if value:
+                    fields.setdefault(key.strip(), value)
+        if codes:
+            fields["barcode"] = codes[0].replace("\t", " | ").strip()
+        return fields
+
+    def readings(self, data: bytes) -> list[Reading]:
+        out = []
+        start = 0
+        for end in self._end.finditer(data):
+            label = data[start:end.end()]
+            start = end.end()
+            texts, codes = self._texts(label)
+            found = self._weight(texts)
+            if found is None:
+                continue
+            value, unit = found
+            out.append(Reading(value, unit, stable=True, raw=label.strip(b"\r\n"),
+                               fields=self._fields(texts, codes)))
+        return out
+
+
+# ---------------------------------------------------------------------------
 # Generic and custom
 # ---------------------------------------------------------------------------
 
@@ -466,6 +579,11 @@ def _catalogue() -> dict[str, Protocol]:
                  request=bytes.fromhex("4D090407"), specificity=3, field_tested=True,
                  families="Mahak MDS 13000 and related Mahak scales (Iran), Serial mode",
                  reference="Mahak developer guide + field test"),
+        LabelPrinter("label_print", "Label printer stream (TSPL / EPL / ZPL)", kind="print",
+                     specificity=3, min_frames=1, field_tested=True,
+                     families="Indicators wired to a label printer (TSC, Zebra, Argox…); sends on Print. "
+                              "Tested on a PTC400 indicator (TSPL)",
+                     reference="TSC TSPL/TSPL2, Zebra EPL2 and ZPL programming manuals + field test"),
         GenericAscii("ascii_generic", "Generic text (number + unit)", specificity=1,
                      families="Any indicator that streams readable weight text",
                      reference="heuristic"),
@@ -481,8 +599,8 @@ PROTOCOLS: dict[str, Protocol] = _catalogue()
 
 # Detection order. Continuous formats are tried on whatever a port sends by
 # itself; poll protocols are asked in turn when it sends nothing.
-CONTINUOUS_IDS = ["toledo_cont", "xk3190_tf0", "and_std", "mt_sics", "sma", "xk3190_reversed",
-                  "ohaus", "sartorius", "ascii_generic"]
+CONTINUOUS_IDS = ["label_print", "toledo_cont", "xk3190_tf0", "and_std", "mt_sics", "sma",
+                  "xk3190_reversed", "ohaus", "sartorius", "ascii_generic"]
 POLL_IDS = ["mt_sics", "and_std", "sma", "nci", "ohaus", "sartorius", "mahak_mds", "cas_enq"]
 
 
