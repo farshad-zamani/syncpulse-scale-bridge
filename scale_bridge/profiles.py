@@ -36,6 +36,7 @@ from .serialio import LineSettings, PortWorker
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$")
 MAX_PROFILES = 64
 RECENT_CHUNKS = 24
+TAIL_BYTES = 64           # end of the previous chunk read together with the next
 
 
 def slug(text: str) -> str:
@@ -129,9 +130,15 @@ def timed_readings(protocol_id: str, params: Optional[dict],
             out.extend(Timed(t, r) for r in found[seen:])
             seen = len(found)
         return out
+    # Some formats only close a frame with the start of the next one (XK3190's
+    # "=…=…" stream), and a device that pauses between frames puts each frame in
+    # its own chunk. So read every chunk together with the end of the previous
+    # one, and keep only the readings that this chunk added.
+    tail = b""
     for t, data in chunks:
-        for r in proto.readings(data):
-            out.append(Timed(t, r))
+        before = len(proto.readings(tail)) if tail else 0
+        out.extend(Timed(t, r) for r in proto.readings(tail + data)[before:])
+        tail = (tail + data)[-TAIL_BYTES:]
     return out
 
 

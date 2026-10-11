@@ -10,7 +10,7 @@ weight, and serves it on the local network for the SyncPulse platform — or
 any other system — to read.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 PRODUCT = "SyncPulse Scale Bridge"
 SERVICE_ID = "syncpulse-scale-bridge"

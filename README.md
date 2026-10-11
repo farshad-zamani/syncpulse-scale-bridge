@@ -109,7 +109,7 @@ other values on the label (order number, shift, date …) in `labels/<profile>-Y
 | `sartorius` | Sartorius SBI (`ESC P`) | on request | Sartorius balances, Combics/Signum |
 | `cas_enq` | CAS ENQ/ACK/DC1 *(experimental)* | handshake | CAS and compatibles |
 | `xk3190_tf0` | XK3190 continuous (tF=0, XOR checksum) | continuous | Yaohua XK3190-A9/A12 and compatibles |
-| `xk3190_reversed` | XK3190 `=` reversed-digit stream (tF=2/3) | continuous | Yaohua XK3190 series, big displays |
+| `xk3190_reversed` | XK3190 `=` reversed-digit stream — **tested on real hardware** (YH-T7E) | continuous | Yaohua XK3190 series, YH-T7E, big displays |
 | `mahak_mds` | Mahak MDS binary (`4D 09 04 07`) — **tested on real hardware** | on request | Mahak MDS 13000 and related models |
 | `label_print` | Label printer stream: TSPL / EPL2 / ZPL — **tested on real hardware** | on Print key | indicators wired to a TSC, Zebra or Argox label printer (e.g. PTC400) |
 | `ascii_generic` | Any readable line with a number and a unit | continuous | everything else that streams text |

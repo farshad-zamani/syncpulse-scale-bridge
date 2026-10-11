@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 — 2026-10-11
+
+- Fix: a continuous format whose frames are closed only by the start of the next one (XK3190 / YH-T7E
+  `=081.100=081.100…`) was not read by `/weight` when the indicator pauses between frames, so that every frame
+  arrives on its own — detection found it, the live reading did not. Each chunk is now read together with the
+  end of the previous one.
+- `xk3190_reversed` field-tested on a Yaohua YH-T7E indicator (9600 8N1, about nine frames a second).
+
 ## 1.1.0 — 2026-10-11
 
 Scales that send only when their Print key is pressed — typically indicators wired to a label printer.

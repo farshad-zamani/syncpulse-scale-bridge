@@ -106,7 +106,7 @@ SyncPulseScaleBridge.exe --simulate mahak_mds,toledo_cont:4800:7E1,mt_sics
 | `sartorius` | Sartorius SBI (`ESC P`) | on request |
 | `cas_enq` | CAS ENQ/ACK/DC1 *(experimental)* | handshake |
 | `xk3190_tf0` | XK3190 continuous (tF=0, XOR checksum) | continuous |
-| `xk3190_reversed` | XK3190 `=` reversed-digit stream (tF=2/3) | continuous |
+| `xk3190_reversed` | XK3190 `=` reversed-digit stream — tested on real hardware (YH-T7E) | continuous |
 | `mahak_mds` | Mahak MDS binary (`4D 09 04 07`) — tested on real hardware | on request |
 | `label_print` | label printer stream: TSPL / EPL2 / ZPL — tested on real hardware (PTC400) | on Print key |
 | `ascii_generic` | any readable line with a number and a unit | continuous |

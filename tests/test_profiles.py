@@ -112,3 +112,21 @@ def test_config_creates_token_and_survives_a_broken_file(tmp_path):
     assert (tmp_path / "bridge.json.broken").exists()
     old = c.token
     assert c.rotate_token() != old
+
+
+def test_reversed_stream_one_frame_per_chunk():
+    # A Yaohua YH-T7E sends "=081.100" about nine times a second with a pause
+    # between frames, so every frame lands in its own chunk (field capture, 1.18 kg).
+    p = profiles.validate(base(protocol="xk3190_reversed", unit="kg", exchange={}))
+    now = 10_000
+    chunks = [(now - 400 + i * 100, b"=081.100") for i in range(5)]
+    timed = profiles.timed_readings("xk3190_reversed", None, chunks)
+    assert [x.reading.value for x in timed] == [1.18] * 4
+    r = profiles.evaluate(p, FakeWorker(chunks), 1500, now)
+    assert r["ok"] and r["value"] == 1.18 and r["unit"] == "kg" and r["stable"] is True
+
+
+def test_chunk_boundaries_do_not_repeat_readings():
+    frame = bytes([0x58, 0x51, 7, 7]) + (550).to_bytes(3, "big")
+    timed = profiles.timed_readings("mahak_mds", None, [(1, frame), (2, frame), (3, frame)])
+    assert [x.t_ms for x in timed] == [1, 2, 3]
