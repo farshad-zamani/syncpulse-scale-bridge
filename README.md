@@ -18,10 +18,9 @@ the protocol by itself — then shows the live weight and serves it to your netw
 
 ---
 
-Built by **[Farshad Zamani](https://github.com/farshad-zamani)** at **[Cloudtart](https://cloudtart.com)** for
-**SyncPulse**, a platform for digital forms, production records and reporting in factories, where the weight
-goes straight into the form an operator is filling in. It is free software and works with any other system
-through a small HTTP/JSON interface.
+Built by **[Farshad Zamani](https://github.com/farshad-zamani)** at **[Cloudtart](https://cloudtart.com)**. Free
+software that works with any system — an ERP, a MES, a web form, a spreadsheet macro or your own script — through a
+small HTTP/JSON interface.
 
 <p align="center">
 <img src="docs/screenshots/find.png" width="49%" alt="Finding a scale automatically">
@@ -41,7 +40,7 @@ writing a parser, and keeping a program running on the PC beside the scale. This
   Weigh-Tronix, Cardinal, Fairbanks…), NCI, Ohaus, Sartorius SBI, CAS, the Chinese XK3190 family, Mahak MDS, any
   readable text, and custom binary/text formats you describe.
 - **Shows and serves the weight** — a bilingual (English/Persian) page on the PC, and a JSON API with value,
-  unit, stability, net/gross, overload and a checksum check, for SyncPulse or any other system.
+  unit, stability, net/gross, overload and a checksum check, for any system on the network.
 - **One file, nothing to install** — `SyncPulseScaleBridge.exe`. Copy it next to the scale and run it.
 - **Production-ready** — survives unplugged USB cables and busy ports, opens the Windows Firewall port and
   starts with Windows from a button (UAC prompt), keeps an access key, and logs to a rotating file.
@@ -57,8 +56,10 @@ writing a parser, and keeping a program running on the PC beside the scale. This
    at `http://127.0.0.1:8765/`.
 4. **Find my scale → Start search.** When the scale is found, give it a name (e.g. `packing-1`) and **Save**.
    The **Scales** tab now shows its live weight.
-5. **Connect to SyncPulse:** note the address and the access key, press **Open port 8765 in the firewall**
+5. **Network access:** note the address and the access key, press **Open port 8765 in the firewall**
    and, if the bridge should run without anyone logged in, **Start with Windows**.
+6. From any other machine: `GET http://<address>:8765/weight?profile=<name>` with the header
+   `X-Bridge-Token: <access key>` — see [the HTTP API](#http-api).
 
 No hardware at hand? Try it with simulated scales:
 
@@ -124,17 +125,7 @@ Missing your scale? Open the **Manual & monitor** tab, look at what arrives, and
 [open an issue](https://github.com/farshad-zamani/syncpulse-scale-bridge/issues) with the model and a sample of the
 raw data. See [CONTRIBUTING.md](CONTRIBUTING.md) for adding a protocol.
 
-## Using it with SyncPulse
-
-In SyncPulse: **Devices → your scale → RS232 connection**: bridge address = the PC's IP address, port = `8765`,
-access key = the key on the **Connect to SyncPulse** tab → data format **Profile on the bridge** → choose the
-profile → **Test connection**. Form cells set to *receive from device* then fill in the weight when the operator
-focuses them.
-
-Bridges of the earlier *SyncPulse Serial Bridge 1.x* can be replaced by this program in place: `POST /read` and
-`bridge.json` are compatible, so existing device settings keep working.
-
-## Using it with any other system — HTTP API
+## HTTP API
 
 Everything below needs the header `X-Bridge-Token: <access key>` except `/health`.
 
@@ -144,10 +135,10 @@ Everything below needs the header `X-Bridge-Token: <access key>` except `/health
 | `GET /ports` | the COM ports of the PC (name, description, USB IDs, chip, warnings) |
 | `GET /profiles` | the saved scale profiles |
 | `GET /weight?profile=packing-1` | the current weight of a saved profile |
-| `GET /labels?profile=ps02&after=SEQ&limit=100` | labels printed by a print-only scale, oldest first (`seq` grows by one per label) |
+| `GET /labels?profile=label-1&after=SEQ&limit=100` | labels printed by a print-only scale, oldest first (`seq` grows by one per label) |
 | `GET /weight?port=COM7&protocol=mt_sics&baud=9600&framing=8N1` | the current weight without a profile |
 | `POST /weight` `{"profile": "packing-1"}` or a whole profile | same, as JSON |
-| `POST /read` `{serial, exchange, frames, max_age_ms, wait_ms}` | the raw frames (1.x contract) |
+| `POST /read` `{serial, exchange, frames, max_age_ms, wait_ms}` | the raw frames, for systems that parse them themselves |
 
 Optional on `/weight`: `max_age_ms` (default 1500 — older readings are `stale`) and `wait_ms` (default 2500 — how
 long to wait for a fresh reading when the port has just been opened).
@@ -176,18 +167,18 @@ if r["ok"] and r["stable"] and not r["stale"]:
 
 - **Access key** — created on first start and kept in `bridge.json`; compared in constant time. Make a new one on
   the **Connect** tab at any time.
-- **Allowed clients** — optionally accept only the SyncPulse server's address(es); the firewall rule can be
+- **Allowed clients** — optionally accept only your server's address(es); the firewall rule can be
   limited to one address too.
 - **The control page is local only** — it opens only on the PC itself (`127.0.0.1`). Its API also requires a
   custom header and a local `Host`, which protects it from other web pages and DNS rebinding. Other machines
   get a short information page instead.
 - **Read-only towards the scale** — detection and reading never send zero, tare, print or configuration
   commands.
-- Keep the bridge on the factory network; it speaks plain HTTP.
+- Keep the bridge on a trusted local network; it speaks plain HTTP.
 
 ## Firewall and running in the background
 
-Windows Firewall blocks incoming connections by default, so the SyncPulse server cannot reach port 8765 until a
+Windows Firewall blocks incoming connections by default, so other machines cannot reach port 8765 until a
 rule allows it. **Open port 8765 in the firewall** asks for administrator permission and runs:
 
 ```bat
@@ -278,4 +269,4 @@ modified versions. See [NOTICE.md](NOTICE.md).
 [GitHub](https://github.com/farshad-zamani) ·
 [LinkedIn](https://www.linkedin.com/in/farshad-zamani92/)
 
-Built for the **SyncPulse** platform. Copyright © 2026 Farshad Zamani — Cloudtart.
+Originally developed for the SyncPulse platform. Copyright © 2026 Farshad Zamani — Cloudtart.

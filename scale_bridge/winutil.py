@@ -3,7 +3,7 @@
 """
 Windows chores the bridge can do by itself, each behind one button:
 
-* open the firewall for the bridge port (so the platform server can reach it),
+* open the firewall for the bridge port (so other machines can reach it),
 * start the bridge with Windows, before anyone logs in (a scheduled task that
   runs as SYSTEM, never stops after 72 hours, and restarts if it fails).
 
@@ -148,7 +148,7 @@ def firewall_open(port: int, remote_ip: Optional[str] = None) -> dict:
         steps.append(f'netsh advfirewall firewall delete rule name=all program="{sys.executable}" >nul 2>&1')
     steps.append(f'netsh advfirewall firewall add rule name="{RULE_NAME}" dir=in action=allow '
                  f'protocol=TCP localport={port} profile=any{remote} '
-                 f'description="{PRODUCT}: lets the platform server read the scales on this PC"')
+                 f'description="{PRODUCT}: lets other machines read the scales on this PC"')
     result = run_elevated(os.environ.get("COMSPEC", "cmd.exe"), "/c " + " & ".join(steps))
     result["status"] = firewall_status(port)
     result["ok"] = bool(result["status"].get("port_ok"))

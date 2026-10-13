@@ -92,7 +92,7 @@ def test_from_detection_and_ad_hoc():
 
 def test_config_round_trip_and_legacy_file(tmp_path):
     path = tmp_path / "bridge.json"
-    # a file written by SyncPulse Serial Bridge 1.x
+    # a file written by an earlier version (1.x)
     path.write_text(json.dumps({"listen_host": "0.0.0.0", "listen_port": 8765, "token": "abc",
                                 "allowed_clients": []}), encoding="utf-8")
     c = Config(str(path))

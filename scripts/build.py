@@ -30,8 +30,7 @@ def version_file(path: str) -> None:
         "OriginalFilename": f"{EXE_NAME}.exe",
         "ProductName": PRODUCT,
         "ProductVersion": __version__,
-        "Comments": f"Author: {ABOUT['author']} - {ABOUT['website']} - {ABOUT['repository']}. "
-                    f"Built for the {ABOUT['platform']} platform.",
+        "Comments": f"Author: {ABOUT['author']} - {ABOUT['website']} - {ABOUT['repository']}",
     }
     entries = ",\n".join(f"          StringStruct({k!r}, {v!r})" for k, v in strings.items())
     text = f"""# UTF-8

@@ -73,7 +73,7 @@ def frame_for(protocol: str, kg: float, stable: bool) -> bytes:
     if protocol == "xk3190_reversed":
         return f"{kg:08.3f}"[::-1].encode() + b"="
     if protocol == "label_print":
-        # What a PTC400 indicator sends to its TSC label printer on Print (TSPL).
+        # What an indicator wired to a TSC label printer sends on Print (TSPL).
         w = f"{kg:7.3f}"
         return ('CLS\r\nSIZE 57 mm, 40 mm\r\nGAP 2 mm,0\r\nDIRECTION 1\r\nREFERENCE 0,0\r\n'
                 'CODEPAGE IranII\r\nTEXT 300,250,"10",270,1,1,"No: 6 SHIFT:2"\r\n'

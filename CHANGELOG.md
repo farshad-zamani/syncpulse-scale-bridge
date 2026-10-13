@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2 — 2026-10-13
+
+- Platform-neutral wording: the control page, command line, README and package metadata describe the bridge
+  for any system that needs a weight; the *Connect* tab is now **Network access** and shows the request to send
+  (`GET /weight?profile=…` with `X-Bridge-Token`).
+
 ## 1.1.1 — 2026-10-11
 
 - Fix: a continuous format whose frames are closed only by the start of the next one (XK3190 / YH-T7E

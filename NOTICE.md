@@ -9,9 +9,6 @@ Copyright (C) 2026 Farshad Zamani — Cloudtart
 - LinkedIn: <https://www.linkedin.com/in/farshad-zamani92/>
 - Source: <https://github.com/farshad-zamani/syncpulse-scale-bridge>
 
-This program was written for the **SyncPulse** platform and is published as
-free software.
-
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later

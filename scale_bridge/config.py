@@ -5,7 +5,7 @@ bridge.json — the bridge's settings, access key and saved scale profiles.
 
 It lives beside the program, so copying the folder copies the setup. When
 that folder is read-only (e.g. Program Files), %LOCALAPPDATA% is used.
-Files written by the earlier SyncPulse Serial Bridge are read as they are.
+Files written by earlier versions (1.x) are read as they are.
 """
 from __future__ import annotations
 

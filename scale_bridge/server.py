@@ -3,13 +3,13 @@
 """
 The HTTP side of the bridge.
 
-For the network (the SyncPulse platform or any other system) — JSON, and
+For the network (any system that needs the weight) — JSON, and
 the header `X-Bridge-Token: <access key>` on everything except /health:
 
     GET  /health                       service, version, host (no key needed)
     GET  /ports                        COM ports on this PC
     POST /read                         raw frames for given line settings
-                                       (the contract of SyncPulse Serial Bridge 1.x)
+                                       (the raw-frames contract of earlier versions)
     GET  /profiles                     saved scale profiles
     GET  /weight?profile=NAME          the current weight, parsed and checked
     GET  /weight?port=COM7&protocol=mt_sics[&baud=9600&framing=8N1]
@@ -166,7 +166,7 @@ class Bridge:
 
     # -- reading -----------------------------------------------------------
     def read_raw(self, body: dict) -> dict:
-        """POST /read: the frames as they arrived (SyncPulse Serial Bridge 1.x contract)."""
+        """POST /read: the frames as they arrived (raw-frames contract of earlier versions)."""
         settings = LineSettings.from_dicts(body.get("serial") or {}, body.get("exchange") or {})
         wait_ms = min(max(int(body.get("wait_ms") or 2500), 0), 10000)
         max_age_ms = min(max(int(body.get("max_age_ms") or 1500), 50), 60000)

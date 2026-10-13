@@ -109,7 +109,6 @@ _BODY = r"""
       <div class="sub" data-t="tagline"></div>
     </div>
     <div class="spacer"></div>
-    <span class="pill brand" data-t="built_for"></span>
     <span class="pill hidden" id="simPill" data-t="simulation"></span>
     <button class="btn" id="langBtn" type="button"></button>
   </div>
@@ -139,8 +138,8 @@ const ABOUT = __ABOUT__;
 const T = {
 en:{
  tagline:'Finds the scale on any COM port, shows the live weight and serves it to your network.',
- built_for:'Built for the SyncPulse platform', simulation:'Simulation', lang:'فارسی',
- tab_scales:'Scales', tab_find:'Find my scale', tab_connect:'Connect to SyncPulse', tab_manual:'Manual & monitor',
+ simulation:'Simulation', lang:'فارسی',
+ tab_scales:'Scales', tab_find:'Find my scale', tab_connect:'Network access', tab_manual:'Manual & monitor',
  tab_protocols:'Protocols', tab_about:'About',
  no_scales:'No scale saved yet.', no_scales_hint:'Plug the scale into this PC and let the program find it.',
  find_now:'Find my scale', stable:'stable', moving:'moving', no_data:'no data', stale:'old reading',
@@ -177,12 +176,12 @@ en:{
  log_found:'✔ {port}: {protocol} at {baud} {framing} — {value} {unit}', log_not_found:'{port}: nothing recognised',
  log_open_failed:'{port}: cannot open — {error}', log_done:'Finished: {found} scale(s) found',
  log_error:'Error: {error}',
- conn_title:'Connect this PC to SyncPulse', conn_intro:'The SyncPulse server reads the scales on this PC over the network. Four things make that work:',
+ conn_title:'Make the scales on this PC available on the network', conn_intro:'Other systems — your server, an ERP, a script — read the scales on this PC over the network. Four things make that work:',
  step_address:'The address of this PC', step_key:'The access key', step_firewall:'An open port in Windows Firewall',
  step_autostart:'Start with Windows (optional, recommended)',
  port_label:'Port', addresses:'Addresses', key_hint:'Only systems that have this key can read the scales. Keep it private.',
  show:'Show', hide:'Hide', new_key:'New key', confirm_key:'Make a new key? Systems using the old key will stop working until you enter the new one.',
- fw_what:'Windows Firewall blocks incoming connections by default, so the SyncPulse server cannot reach port {port} on this PC until a rule allows it. The button below asks Windows for administrator permission (a UAC prompt) and adds the inbound rule “SyncPulse Scale Bridge” for TCP port {port} on all network types. It also removes any block rule Windows added for this program if its “Allow access?” question was cancelled.',
+ fw_what:'Windows Firewall blocks incoming connections by default, so other machines cannot reach port {port} on this PC until a rule allows it. The button below asks Windows for administrator permission (a UAC prompt) and adds the inbound rule “SyncPulse Scale Bridge” for TCP port {port} on all network types. It also removes any block rule Windows added for this program if its “Allow access?” question was cancelled.',
  fw_open:'Open port {port} in the firewall', fw_remove:'Remove the rule', fw_is_open:'Port {port} is open in Windows Firewall.',
  fw_is_closed:'Port {port} is not open yet.', fw_only_from:'Allow only from (server IP, optional)',
  fw_manual:'To do it by hand, run in an administrator Command Prompt:',
@@ -191,8 +190,8 @@ en:{
  as_on:'Starts with Windows.', as_off:'Does not start with Windows.', as_other:'A task exists but points to another copy of the program.',
  as_enable:'Start with Windows', as_disable:'Stop starting with Windows',
  as_note:'After enabling it, close this window and restart the PC (or keep this window open until then). Opening the program again later shows this page for the background copy.',
- in_syncpulse:'Then, in SyncPulse', in_syncpulse_steps:'Devices → your scale → RS232 connection: bridge address = one of the addresses above, port = {port}, access key = the key above → Data format: “Profile on the bridge” → choose the profile → Test connection.',
- allowed_title:'Allowed clients', allowed_hint:'Leave empty to accept any machine that has the key, or list the SyncPulse server IP addresses (comma separated).',
+ in_syncpulse:'Then, in the system that needs the weight', in_syncpulse_steps:'Send this request with the key above. The answer is JSON — value, unit, stable, age_ms … (documentation on GitHub):',
+ allowed_title:'Allowed clients', allowed_hint:'Leave empty to accept any machine that has the key, or list the IP addresses of the machines that may read the scales (comma separated).',
  config_file:'Settings file', cancelled_uac:'Cancelled at the Windows prompt.', failed:'Failed: {error}', done:'Done',
  manual_title:'Manual settings and raw monitor', manual_intro:'Watch exactly what arrives on a port with the settings you choose. Useful for an unknown indicator, a cable test, or to check a setting.',
  baud:'Speed (baud)', framing:'Framing', request:'Request to send (hex, empty = only listen)', poll:'Every (ms)',
@@ -204,15 +203,15 @@ en:{
  families:'Used by', request_col:'Request', kind:'Type', reference:'Reference',
  kind_continuous:'continuous', kind_poll:'on request', kind_handshake:'handshake', kind_print:'on Print key',
  about_title:'About', about_text:'SyncPulse Scale Bridge connects weighing scales with an RS-232 serial port to computers and networks. Copy the single program file to the PC beside the scale, run it, and it finds the port, the speed and the protocol by itself, shows the live weight and serves it on the local network.',
- about_platform:'It was written for SyncPulse, a platform for digital forms, production records and reporting, where the weight goes straight into the form a worker is filling in. It is free software and works with any other system through its simple HTTP/JSON interface.',
+ about_platform:'Free software that works with any system through its simple HTTP/JSON interface. Originally developed for the SyncPulse platform.',
  author:'Author', company:'Company', website:'Website', license:'License', source:'Source code', version:'Version',
  license_text:'Free software under the GNU General Public License v3 or later, with an additional term (section 7(b)): the author attribution shown in the program must be kept in copies and modified versions.',
  made_by:'Made by', err_name:'Choose a name: letters, digits, - or _.', already_saved:'saved as {names}'
 },
 fa:{
  tagline:'باسکول را روی هر درگاه COM پیدا می‌کند، وزن زنده را نشان می‌دهد و آن را روی شبکه در اختیار می‌گذارد.',
- built_for:'ساخته‌شده برای پلتفرم SyncPulse', simulation:'شبیه‌ساز', lang:'English',
- tab_scales:'باسکول‌ها', tab_find:'پیدا کردن باسکول', tab_connect:'اتصال به SyncPulse', tab_manual:'تنظیم دستی و مانیتور',
+ simulation:'شبیه‌ساز', lang:'English',
+ tab_scales:'باسکول‌ها', tab_find:'پیدا کردن باسکول', tab_connect:'دسترسی از شبکه', tab_manual:'تنظیم دستی و مانیتور',
  tab_protocols:'پروتکل‌ها', tab_about:'درباره',
  no_scales:'هنوز باسکولی ذخیره نشده است.', no_scales_hint:'باسکول را به این رایانه وصل کنید تا برنامه آن را پیدا کند.',
  find_now:'پیدا کردن باسکول', stable:'پایدار', moving:'در حال تغییر', no_data:'بدون داده', stale:'خوانش قدیمی',
@@ -249,12 +248,12 @@ fa:{
  log_found:'✔ {port}: {protocol} با {baud} {framing} — {value} {unit}', log_not_found:'{port}: چیزی شناخته نشد',
  log_open_failed:'{port}: باز نمی‌شود — {error}', log_done:'پایان: {found} باسکول پیدا شد',
  log_error:'خطا: {error}',
- conn_title:'اتصال این رایانه به SyncPulse', conn_intro:'سرور SyncPulse از راه شبکه باسکول‌های این رایانه را می‌خواند. برای این کار چهار چیز لازم است:',
+ conn_title:'در دسترس گذاشتن باسکول‌های این رایانه روی شبکه', conn_intro:'سامانه‌های دیگر — سرور شما، ERP، یک اسکریپت — از راه شبکه باسکول‌های این رایانه را می‌خوانند. برای این کار چهار چیز لازم است:',
  step_address:'نشانی این رایانه', step_key:'کلید دسترسی', step_firewall:'باز بودن درگاه در فایروال ویندوز',
  step_autostart:'اجرا همراه ویندوز (اختیاری، پیشنهادی)',
  port_label:'درگاه', addresses:'نشانی‌ها', key_hint:'فقط سامانه‌هایی که این کلید را دارند می‌توانند باسکول‌ها را بخوانند. آن را محرمانه نگه دارید.',
  show:'نمایش', hide:'پنهان', new_key:'کلید تازه', confirm_key:'کلید تازه ساخته شود؟ سامانه‌هایی که کلید قبلی را دارند تا کلید تازه را وارد نکنید کار نمی‌کنند.',
- fw_what:'فایروال ویندوز به‌طور پیش‌فرض اتصال‌های ورودی را می‌بندد؛ بنابراین تا وقتی قانونی اجازه ندهد، سرور SyncPulse به درگاه {port} این رایانه نمی‌رسد. دکمه‌ی زیر از ویندوز اجازه‌ی مدیر (پنجره‌ی UAC) می‌گیرد و قانون ورودی «SyncPulse Scale Bridge» را برای TCP درگاه {port} روی همه‌ی انواع شبکه می‌سازد. اگر پرسش «Allow access؟» ویندوز لغو شده باشد، قانون مسدودکننده‌ای را هم که ویندوز برای این برنامه ساخته پاک می‌کند.',
+ fw_what:'فایروال ویندوز به‌طور پیش‌فرض اتصال‌های ورودی را می‌بندد؛ بنابراین تا وقتی قانونی اجازه ندهد، رایانه‌های دیگر به درگاه {port} این رایانه نمی‌رسند. دکمه‌ی زیر از ویندوز اجازه‌ی مدیر (پنجره‌ی UAC) می‌گیرد و قانون ورودی «SyncPulse Scale Bridge» را برای TCP درگاه {port} روی همه‌ی انواع شبکه می‌سازد. اگر پرسش «Allow access؟» ویندوز لغو شده باشد، قانون مسدودکننده‌ای را هم که ویندوز برای این برنامه ساخته پاک می‌کند.',
  fw_open:'باز کردن درگاه {port} در فایروال', fw_remove:'حذف قانون', fw_is_open:'درگاه {port} در فایروال ویندوز باز است.',
  fw_is_closed:'درگاه {port} هنوز باز نیست.', fw_only_from:'فقط از این نشانی (IP سرور، اختیاری)',
  fw_manual:'برای انجام دستی، در Command Prompt با دسترسی مدیر اجرا کنید:',
@@ -263,8 +262,8 @@ fa:{
  as_on:'همراه ویندوز اجرا می‌شود.', as_off:'همراه ویندوز اجرا نمی‌شود.', as_other:'وظیفه‌ای هست ولی به نسخه‌ی دیگری از برنامه اشاره می‌کند.',
  as_enable:'اجرا همراه ویندوز', as_disable:'لغو اجرا همراه ویندوز',
  as_note:'پس از فعال کردن، این پنجره را ببندید و رایانه را دوباره راه‌اندازی کنید (یا تا آن زمان این پنجره را باز نگه دارید). اگر بعداً برنامه را باز کنید، همین صفحه برای نسخه‌ی پس‌زمینه باز می‌شود.',
- in_syncpulse:'سپس در SyncPulse', in_syncpulse_steps:'دستگاه‌ها ← باسکول شما ← اتصال RS232: نشانی پل = یکی از نشانی‌های بالا، درگاه = {port}، کلید دسترسی = کلید بالا ← قالب داده: «پروفایل روی پل» ← انتخاب پروفایل ← تست اتصال.',
- allowed_title:'سامانه‌های مجاز', allowed_hint:'خالی بگذارید تا هر دستگاهی که کلید را دارد پذیرفته شود، یا IP سرور(های) SyncPulse را با ویرگول جدا بنویسید.',
+ in_syncpulse:'سپس در سامانه‌ای که وزن را لازم دارد', in_syncpulse_steps:'این درخواست را با کلید بالا بفرستید. پاسخ JSON است — value، unit، stable، age_ms … (مستندات در گیت‌هاب):',
+ allowed_title:'سامانه‌های مجاز', allowed_hint:'خالی بگذارید تا هر دستگاهی که کلید را دارد پذیرفته شود، یا IP رایانه‌هایی را که اجازه‌ی خواندن دارند با ویرگول جدا بنویسید.',
  config_file:'فایل تنظیمات', cancelled_uac:'در پنجره‌ی ویندوز لغو شد.', failed:'ناموفق: {error}', done:'انجام شد',
  manual_title:'تنظیم دستی و مانیتور خام', manual_intro:'دقیقاً ببینید با تنظیمی که انتخاب می‌کنید چه چیزی روی درگاه می‌رسد. برای نمایشگر ناشناخته، آزمایش کابل یا بررسی یک تنظیم.',
  baud:'سرعت (baud)', framing:'قالب', request:'درخواست ارسالی (hex؛ خالی = فقط گوش دادن)', poll:'هر (میلی‌ثانیه)',
@@ -276,7 +275,7 @@ fa:{
  families:'کاربرد', request_col:'درخواست', kind:'نوع', reference:'مرجع',
  kind_continuous:'پیوسته', kind_poll:'با درخواست', kind_handshake:'دست‌دادن', kind_print:'با کلید چاپ',
  about_title:'درباره', about_text:'SyncPulse Scale Bridge باسکول‌های دارای درگاه سریال RS-232 را به رایانه و شبکه وصل می‌کند. تنها فایل برنامه را روی رایانه‌ی کنار باسکول کپی و اجرا کنید؛ درگاه، سرعت و پروتکل را خودش پیدا می‌کند، وزن زنده را نشان می‌دهد و روی شبکه‌ی محلی در اختیار می‌گذارد.',
- about_platform:'این برنامه برای SyncPulse نوشته شده است؛ پلتفرم فرم‌های دیجیتال، سوابق تولید و گزارش‌گیری که وزن را مستقیم در فرمی که کارگر پر می‌کند می‌نشاند. نرم‌افزار آزاد است و با رابط ساده‌ی HTTP/JSON با هر سامانه‌ی دیگری هم کار می‌کند.',
+ about_platform:'نرم‌افزار آزاد است و با رابط ساده‌ی HTTP/JSON با هر سامانه‌ای کار می‌کند. در اصل برای پلتفرم SyncPulse توسعه داده شد.',
  author:'سازنده', company:'شرکت', website:'وب‌سایت', license:'مجوز', source:'کد منبع', version:'نسخه',
  license_text:'نرم‌افزار آزاد با مجوز GNU GPL نسخه‌ی ۳ یا بالاتر، با یک شرط افزوده (بند ۷(ب)): نام و مشخصات سازنده که در برنامه نمایش داده می‌شود باید در همه‌ی نسخه‌ها و نسخه‌های تغییر یافته حفظ شود.',
  made_by:'ساخته‌ی', err_name:'یک نام انتخاب کنید: حروف انگلیسی، عدد، - یا _.', already_saved:'ذخیره‌شده با نام {names}'
@@ -608,7 +607,8 @@ function renderConnect() {
         ${!as.enabled || !as.this_program ? `<button class="btn primary" id="asOn">${esc(t('as_enable'))}</button>` : ''}</div>
       <p class="small muted">${esc(t('as_note'))}</p>`}
     </div>
-    <div class="card"><h3>${esc(t('in_syncpulse'))}</h3><p>${esc(t('in_syncpulse_steps', {port}))}</p></div>
+    <div class="card"><h3>${esc(t('in_syncpulse'))}</h3><p>${esc(t('in_syncpulse_steps', {port}))}</p>
+      <div class="log mono ltr" style="text-align:left">GET http://${esc((st.addresses || [])[0] || '127.0.0.1')}:${esc(port)}/weight?profile=&lt;name&gt;<br>X-Bridge-Token: &lt;key&gt;</div></div>
     <div class="card"><h3>${esc(t('allowed_title'))}</h3><p class="small muted">${esc(t('allowed_hint'))}</p>
       <div class="row"><input class="ltr" id="allowed" style="flex:1" value="${esc((st.allowed_clients || []).join(', '))}">
       <button class="btn" id="allowedSave">${esc(t('save'))}</button></div>

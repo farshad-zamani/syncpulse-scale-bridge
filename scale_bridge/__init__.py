@@ -6,11 +6,10 @@ SyncPulse Scale Bridge — a universal RS-232 scale reader and network bridge.
 
 Plug a weighing scale's serial cable into a Windows PC, run one program, and
 it finds the port, the speed and the protocol by itself, shows the live
-weight, and serves it on the local network for the SyncPulse platform — or
-any other system — to read.
+weight, and serves it on the local network for any other system to read.
 """
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 PRODUCT = "SyncPulse Scale Bridge"
 SERVICE_ID = "syncpulse-scale-bridge"

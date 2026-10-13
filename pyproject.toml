@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "syncpulse-scale-bridge"
 dynamic = ["version"]
-description = "Finds RS-232 weighing scales on any COM port, reads them, and serves the weight on the network. Built for the SyncPulse platform."
+description = "Finds RS-232 weighing scales on any COM port, reads them, and serves the weight on the network."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE", "NOTICE.md"]
@@ -13,7 +13,7 @@ authors = [{ name = "Farshad Zamani", email = "info@cloudtart.com" }]
 requires-python = ">=3.9"
 dependencies = ["pyserial>=3.5"]
 keywords = ["scale", "weighing", "rs232", "serial", "weight", "indicator", "mettler-toledo",
-            "sics", "xk3190", "industrial", "bridge", "syncpulse"]
+            "sics", "xk3190", "industrial", "bridge", "label-printer", "tspl"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",

@@ -252,7 +252,7 @@ def cmd_about() -> int:
     for key in ("product", "version", "author", "company", "website", "github", "linkedin",
                 "repository", "license"):
         say(f"{key:11} {ABOUT[key]}")
-    say(f"Built for the {ABOUT['platform']} platform. {ABOUT['copyright']}")
+    say(ABOUT["copyright"])
     return 0
 
 
@@ -302,7 +302,7 @@ def cmd_run(args, config: Config) -> int:
     say(bar)
     say(f" {PRODUCT} {__version__}" + ("   [SIMULATION]" if args.simulate else ""))
     say(f" {ABOUT['copyright']} - {ABOUT['website']}")
-    say(f" Built for the {ABOUT['platform']} platform - {ABOUT['license']}")
+    say(f" {ABOUT['license']} - {ABOUT['repository']}")
     say(bar)
     say(f" Control page (this PC) : {url}")
     for ip in winutil.lan_addresses() or ["<this PC's IP address>"]:
@@ -340,7 +340,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="SyncPulseScaleBridge",
         description=f"{PRODUCT} {__version__} - finds RS-232 scales, reads them and serves the weight "
-                    f"on the network. Built for the {ABOUT['platform']} platform.",
+                    f"on the network.",
         epilog=f"{ABOUT['copyright']} - {ABOUT['website']} - {ABOUT['repository']}")
     ap.add_argument("--version", action="version", version=f"{PRODUCT} {__version__}")
     ap.add_argument("--config", default=None)
